@@ -1,11 +1,9 @@
-# Spotdl dev related testing files
+# minimal dev related testing files
 *.log
-*.spotdlTrackingFile
+*.minimalTrackingFile
 *.mp3
 *.mp4
 
-# Reference Code
-originalCodeRef/*
 
 # Python
 __pycache__
@@ -21,9 +19,10 @@ externalTools/*
 Hacks/*
 
 # setuptools
-spotdl.egg-info/*
+minimal.egg-info/*
 build/*
 dist/*
 venv
 .idea
-spotdl/test.py
+minimal/test.py
+minimal/config.py
