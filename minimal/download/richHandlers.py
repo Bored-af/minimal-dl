@@ -286,18 +286,6 @@ class _ProgressTracker:
         self.progress = 100  # self.progress + 5
         self.update("Done")
 
-    def metadata_route_albumart(self) -> None:
-        """
-        done with fetching and embedding of the albumart
-        """
-        self.progress = 50
-        self.update("Embedding")
-
-    def metadata_route_completion(self) -> None:
-        """done with metadata """
-        self.progress = 50
-        self.update("Done with embedding")
-
     def notify_error(self, e, tb):
         """
         `e` : error message

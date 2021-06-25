@@ -65,6 +65,7 @@ def console_entry_point():
     This is where all the console processing magic happens.
     Its super simple, rudimentary even but, it's dead simple & it works.
     """
+    print("rich branch")
 
     if "--help" in cliArgs or "-h" in cliArgs:
         print(help_notice)
@@ -152,7 +153,6 @@ def console_entry_point():
             except Exception:
                 print('No song named "%s" could be found on spotify' % request)
 
-    downloader.close()
 
 
 if __name__ == "__main__":
