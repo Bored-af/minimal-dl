@@ -154,6 +154,15 @@ class SongObj:
 
         return contributingArtists
 
+    def get_display_name(self) -> str:
+        """
+        returns songs's display name.
+        """
+
+        return str(
+            ", ".join(self.get_contributing_artists()) + " - " + self.get_song_name()
+        )
+
     def get_link(self) -> str:
         url = "https://open.spotify.com/track/" + self.__rawTrackMeta["id"]
         return url
