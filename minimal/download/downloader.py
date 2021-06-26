@@ -47,7 +47,7 @@ class DownloadManager:
         self.downloadTracker = DownloadTracker()
         self.skipfile = skipfile
 
-        self.displayManager.clear()
+        
 
         if sys.platform == "win32":
             #! ProactorEventLoop is required on Windows to run subprocess asynchronously
@@ -75,7 +75,6 @@ class DownloadManager:
         self.downloadTracker.clear()
         self.downloadTracker.load_song_list([songObj])
 
-        self.displayManager.reset()
         self.displayManager.set_song_count_to(1)
 
         self._download_asynchronously([songObj])
@@ -92,7 +91,6 @@ class DownloadManager:
         self.downloadTracker.clear()
         self.downloadTracker.load_song_list(songObjList)
 
-        self.displayManager.reset()
         self.displayManager.set_song_count_to(len(songObjList))
 
         self._download_asynchronously(songObjList)
@@ -111,7 +109,6 @@ class DownloadManager:
 
         songObjList = self.downloadTracker.get_song_list()
 
-        self.displayManager.reset()
         self.displayManager.set_song_count_to(len(songObjList))
 
         self._download_asynchronously(songObjList)
@@ -128,6 +125,7 @@ class DownloadManager:
 
         Downloads, Converts, Normalizes song & embeds metadata as ID3 tags.
         """
+        displayProgressTracker = self.displayManager.new_progress_tracker(songObj)
 
         # ! all YouTube downloads are to .\Temp; they are then converted and put into .\ and
         # ! finally followed up with ID3 metadata tags
@@ -191,13 +189,9 @@ class DownloadManager:
                 audioFile = ID3(absPath)
                 if len(audioFile.items()) < 10:
                     addMetadata = True
-            if addMetadata:
-                print(
-                    f"\n Embedding metadata for {songObj.get_primary_artist_name()} - {songObj.get_song_name()}"
-                )
             if addMetadata == False:
                 if self.displayManager:
-                    self.displayManager.notify_download_skip()
+                    displayProgressTracker.notify_download_skip()
                 if self.downloadTracker:
                     self.downloadTracker.notify_download_completion(songObj)
                 # print(f"skipping {songObj.get_primary_artist_name()} - {songObj.get_song_name()}")
@@ -209,7 +203,7 @@ class DownloadManager:
             if self.displayManager:
                 youtubeHandler = YouTube(
                     url=songObj.get_youtube_link(),
-                    on_progress_callback=self.displayManager.pytube_progress_hook,
+                    on_progress_callback=displayProgressTracker.pytube_progress_hook,
                 )
             else:
                 youtubeHandler = YouTube(songObj.get_youtube_link())
@@ -255,7 +249,7 @@ class DownloadManager:
                     break
 
             if self.displayManager:
-                self.displayManager.notify_conversion_completion()
+                displayProgressTracker.notify_conversion_completion()
         else:
             downloadedFilePath = None
 
@@ -304,7 +298,7 @@ class DownloadManager:
 
         rawAlbumArt = ses.get(songObj.get_album_cover_url()).content
         if addMetadata and self.displayManager:
-            self.displayManager.metadata_route_albumart()
+            displayProgressTracker.metadata_route_albumart()
 
         audioFile["APIC"] = AlbumCover(
             encoding=3, mime="image/jpeg", type=3, desc="Cover", data=rawAlbumArt
@@ -321,12 +315,12 @@ class DownloadManager:
 
         # Do the necessary cleanup
         if self.displayManager and not addMetadata:
-            self.displayManager.notify_download_completion()
+            displayProgressTracker.notify_download_completion()
 
         if self.downloadTracker and not addMetadata:
             self.downloadTracker.notify_download_completion(songObj)
         if addMetadata and self.displayManager:
-            self.displayManager.metadata_route_completion()
+            displayProgressTracker.metadata_route_completion()
         if downloadedFilePath == None:
             return None
         # delete the unnecessary YouTube download File
