@@ -65,7 +65,7 @@ def console_entry_point():
     This is where all the console processing magic happens.
     Its super simple, rudimentary even but, it's dead simple & it works.
     """
-    print("rich branch")
+    print("main branch")
 
     if "--help" in cliArgs or "-h" in cliArgs:
         print(help_notice)
