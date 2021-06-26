@@ -1,7 +1,8 @@
 # ===============
 # === Imports ===
 # ===============
-
+from bisect import insort
+from typing import List
 from rich.console import Console
 from rich.progress import BarColumn, TimeRemainingColumn, Progress, ProgressColumn
 from rich.progress import Task
@@ -20,7 +21,10 @@ from typing import (
     Optional,
 )
 
-
+from minimal.config import path, skipFile
+from minimal.mongodb import query_for_link,insert_link_entry
+from minimal.search.songObj import SongObj
+from minimal.search.utils import song_present
 # =============
 # === Theme ===
 # =============
@@ -116,7 +120,7 @@ class DisplayManager:
             # ! the last refreshed display remains in the terminal with the cursor on
             # ! the following line. You can also make the progress display disappear on
             # ! exit by setting transient=True on the Progress constructor
-            transient=self.isLegacy,
+            # transient=self.isLegacy,
         )
 
         self.songCount = 0
@@ -295,7 +299,7 @@ class _ProgressTracker:
 
     def metadata_route_completion(self) -> None:
         """done with metadata """
-        self.progress = 50
+        self.progress = 100
         self.update("Done with embedding")
 
     def notify_error(self, e, tb):
@@ -341,3 +345,127 @@ class _ProgressTracker:
         self.parent.update_overall()
 
         self.oldProgress = self.progress
+
+
+class DownloadTracker:
+    def __init__(self):
+        self.songObjList = []
+        self.saveFile = None
+        self.skip_file = open(path, "a")
+
+    def load_tracking_file(self, trackingFilePath: str) -> None:
+        """
+        `str` `trackingFilePath` : path to a .minimalTrackingFile
+
+        RETURNS `~`
+
+        reads songsObj's from disk and prepares to track their download
+        """
+
+        # Attempt to read .minimalTrackingFile, raise exception if file can't be read
+        try:
+            file = open(trackingFilePath, "rb")
+            songDataDumps = eval(file.read().decode())
+            file.close()
+        except FileNotFoundError:
+            raise Exception("no such tracking file found: %s" % trackingFilePath)
+
+        # Save path to .minimalTrackingFile
+        self.saveFile = trackingFilePath
+
+        # convert song data dumps to songObj's
+        #! see, songObj.get_data_dump and songObj.from_dump for more details
+        for dump in songDataDumps:
+            self.songObjList.append(SongObj.from_dump(dump))
+
+    def load_song_list(self, songObjList: List[SongObj]) -> None:
+        """
+        `list<songOjb>` `songObjList` : songObj's being downloaded
+
+        RETURNS `~`
+
+        prepares to track download of provided songObj's
+        """
+
+        self.songObjList = songObjList
+
+        self.backup_to_disk()
+
+    def get_song_list(self) -> List[SongObj]:
+        """
+        RETURNS `list<songObj>
+
+        get songObj's representing songs yet to be downloaded
+        """
+        return self.songObjList
+
+    def backup_to_disk(self):
+        """
+        RETURNS `~`
+
+        backs up details of songObj's yet to be downloaded to a .minimalTrackingFile
+        """
+        # remove tracking file if no songs left in queue
+        #! we use 'return None' as a convenient exit point
+        if len(self.songObjList) == 0:
+            return None
+
+        # prepare datadumps of all songObj's yet to be downloaded
+        songDataDumps = []
+
+        for song in self.songObjList:
+            songDataDumps.append(song.get_data_dump())
+
+        #! the default naming of a tracking file is $nameOfFirstSOng.minimalTrackingFile,
+        #! it needs a little fixing because of disallowed characters in file naming
+        if not self.saveFile:
+            songName = self.songObjList[0].get_song_name()
+
+            for disallowedChar in ["/", "?", "\\", "*", "|", "<", ">"]:
+                if disallowedChar in songName:
+                    songName = songName.replace(disallowedChar, "")
+
+            songName = songName.replace('"', "'").replace(": ", " - ")
+
+            self.saveFile = songName + ".minimalTrackingFile"
+
+        # backup to file
+        #! we use 'wb' instead of 'w' to accommodate your fav K-pop/J-pop/Viking music
+        file = open(self.saveFile, "wb")
+        file.write(str(songDataDumps).encode())
+        file.close()
+
+    def notify_download_completion(self, songObj: SongObj) -> None:
+        """
+        `songObj` `songObj` : songObj representing song that has been downloaded
+
+        RETURNS `~`
+
+        removes given songObj from download queue and updates .minimalTrackingFile
+        """
+
+        if songObj in self.songObjList:
+            self.songObjList.remove(songObj)
+            if len(query_for_link(songObj.get_rawId())) == 0:
+                # the entry doesn't exist in the database
+                insert_link_entry(songObj.get_rawId(), songObj.get_youtube_link())
+            if skipFile:
+                skipfile = open(path, "r")
+                links = []
+                links = [line for line in skipfile]
+                links.sort()
+                skipfile.close()
+                url = songObj.get_link() +"\n"
+                if not song_present(url, links):
+                     insort(links,url)
+                     file = open(path, "a")
+                     file.truncate(0)
+                     file.seek(0)
+                     file.writelines(links)
+                     file.close()
+        self.backup_to_disk()
+
+    def clear(self):
+        self.songObjList = []
+        self.saveFile = None
+

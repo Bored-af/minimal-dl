@@ -20,8 +20,7 @@ from requests import get
 from typing import List
 
 from minimal.search.songObj import SongObj
-from minimal.download.progressHandlers import DisplayManager
-from minimal.download.trackingfileHandlers import DownloadTracker
+from minimal.download.progressHandlers import DisplayManager, DownloadTracker
 from minimal.search.sessionClient import get_session
 from minimal.search.utils import path
 
@@ -190,10 +189,6 @@ class DownloadManager:
                 audioFile = ID3(absPath)
                 if len(audioFile.items()) < 10:
                     addMetadata = True
-            if addMetadata:
-                print(
-                    f"\n Embedding metadata for {songObj.get_primary_artist_name()} - {songObj.get_song_name()}"
-                )
             if addMetadata == False:
                 if self.displayManager:
                     displayProgressTracker.notify_download_skip()
