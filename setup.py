@@ -1,13 +1,13 @@
 from setuptools import setup
 
 setup(
-    name="minimal",
+    name="minimal-dl",
     packages=[
         "minimal",
         "minimal.search",
         "minimal.download",
     ],
-    version="3.2.0-pre",
+    version="1.0.0",
     install_requires=[
         "spotipy",
         "pytube",
@@ -28,7 +28,7 @@ setup(
     license="MIT",
     python_requires=">=3.6",
     url="https://github.com/brayo-pip",
-    download_url="https://pypi.org/project/minimal/",
+    download_url="https://pypi.org/project/minimal-dl/",
     keywords=[
         "spotify",
         "downloader",
