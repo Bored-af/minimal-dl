@@ -11,9 +11,7 @@ setup(
     install_requires=[
         "spotipy",
         "pytube",
-        "tqdm",
         "rapidfuzz",
-        "rauth",
         "rich",
         "requests",
         "mutagen",
