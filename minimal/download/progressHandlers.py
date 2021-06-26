@@ -1,7 +1,16 @@
 # ===============
 # === Imports ===
 # ===============
-from bisect import insort
+
+
+
+#! we need to import the whole shebang here to patch multiprocessing's AutoProxy.
+#! Attempting to use a displayManager across multiple processes without the
+#! patch will result in a 'Key Error: Autoproxy takes no key argument manager_owned'
+# import multiprocessing.managers
+
+#! These are not used, they're here for static type checking using mypy
+from minimal.search.songObj import SongObj
 from typing import List
 from rich.console import Console
 from rich.progress import BarColumn, TimeRemainingColumn, Progress, ProgressColumn
