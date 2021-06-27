@@ -12,6 +12,7 @@
 #! These are not used, they're here for static type checking using mypy
 from typing import List
 from bisect import insort
+from math import ceil
 from rich.console import Console
 from rich.progress import BarColumn, TimeRemainingColumn, Progress, ProgressColumn
 from rich.progress import Task
@@ -269,11 +270,9 @@ class _ProgressTracker:
         # ! It's scaled to 90 because, the arbitrary division of each songs 100
         # ! iterations is (a) 90 for download (b) 5 for conversion & normalization
         # ! and (c) 5 for ID3 tag embedding
-        iterFraction = int((len(chunk) / fileSize) * 90)
+        iterFraction = int(ceil((len(chunk) / fileSize))) * 90
 
         self.progress += iterFraction
-        print(self.progress)
-        print("pytube hook")
         self.update("Downloading")
 
     def notify_youtube_download_completion(self) -> None:
