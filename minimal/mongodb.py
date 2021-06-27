@@ -1,6 +1,6 @@
 import pymongo
 
-client = pymongo.MongoClient("mongodb+srv://brayo:EasyPass@brayos.gmypf.mongodb.net/myFirstDatabase?retryWrites=true&w=majority")
+client = pymongo.MongoClient("mongodb+srv://brayo:EasyPass@brayos.gmypf.mongodb.net/spotify?retryWrites=true&w=majority")
 db = client.spotify
 spotify_db = db.urlpairs
 
@@ -34,8 +34,11 @@ def insert_genius_link(id:str,genius_url:str) -> bool:
 def query_for_genius_link(id:str)->str:
     result = spotify_db.find_one({"spotify_id":id})
     if result != None:
-        if result["genius_url"] != "None":
-            return result["genius_url"]
+        try:
+            if result["genius_url"] != "None":
+                return result["genius_url"]
+        except:
+            return "None"
     return "None"
 def wrapper_for_findAny():
     result = spotify_db.find_one()

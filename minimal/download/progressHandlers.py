@@ -1,8 +1,18 @@
 # ===============
 # === Imports ===
 # ===============
-from bisect import insort
+
+
+
+#! we need to import the whole shebang here to patch multiprocessing's AutoProxy.
+#! Attempting to use a displayManager across multiple processes without the
+#! patch will result in a 'Key Error: Autoproxy takes no key argument manager_owned'
+# import multiprocessing.managers
+
+#! These are not used, they're here for static type checking using mypy
 from typing import List
+from bisect import insort
+from math import ceil
 from rich.console import Console
 from rich.progress import BarColumn, TimeRemainingColumn, Progress, ProgressColumn
 from rich.progress import Task
@@ -260,9 +270,9 @@ class _ProgressTracker:
         # ! It's scaled to 90 because, the arbitrary division of each songs 100
         # ! iterations is (a) 90 for download (b) 5 for conversion & normalization
         # ! and (c) 5 for ID3 tag embedding
-        iterFraction = len(chunk) / fileSize * 90
+        iterFraction = int(ceil((len(chunk) / fileSize))) * 90
 
-        self.progress = self.progress + iterFraction
+        self.progress += iterFraction
         self.update("Downloading")
 
     def notify_youtube_download_completion(self) -> None:

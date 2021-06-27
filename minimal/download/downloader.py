@@ -9,6 +9,7 @@ from os import mkdir, remove
 from os.path import join, exists, abspath
 
 from pytube import YouTube
+import pytube.request 
 
 from mutagen.easyid3 import EasyID3, ID3
 from mutagen.id3 import APIC as AlbumCover, ID3NoHeaderError
@@ -31,6 +32,7 @@ from minimal.search.utils import path
 ses = get_session()
 path = path
 skipfile = open(path, "a")
+pytube.request.default_range_size = 1048576
 # ===========================================================
 # === The Download Manager (the tyrannical boss lady/guy) ===
 # ===========================================================
@@ -201,9 +203,11 @@ class DownloadManager:
         if addMetadata == False:
             # download Audio from YouTube
             if self.displayManager:
+                # pytube.request.default_range_size = 524288
                 youtubeHandler = YouTube(
                     url=songObj.get_youtube_link(),
                     on_progress_callback=displayProgressTracker.pytube_progress_hook,
+                    on_complete_callback=displayProgressTracker.notify_youtube_download_completion
                 )
             else:
                 youtubeHandler = YouTube(songObj.get_youtube_link())
