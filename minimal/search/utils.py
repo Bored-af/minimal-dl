@@ -12,7 +12,10 @@ import os.path
 
 path = minimal.config.path
 skipFile = minimal.config.skipFile
-file = open(path, "r")
+if os.path.exists(path):
+    file = open(path, "r")
+else:
+    file = open(path, "x")
 
 links = [line[: len(line) - 1] for line in file]
 
