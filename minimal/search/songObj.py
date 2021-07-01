@@ -50,15 +50,14 @@ class SongObj:
         # get best match from the given provider
         songName = rawTrackMeta["name"]
 
-        albumName = rawTrackMeta["album"]["name"]
-
         duration = round(rawTrackMeta["duration_ms"] / 1000, ndigits=3)
 
         contributingArtists = []
 
         for artist in rawTrackMeta["artists"]:
             contributingArtists.append(artist["name"])
-        result = query_for_link(rawTrackMeta["id"])
+        # result = query_for_link(rawTrackMeta["id"])
+        result = ""
         if len(result)!=0:
             youtubeLink = "https://www.youtube.com/watch?v="+result
         else:
@@ -66,9 +65,7 @@ class SongObj:
             youtubeLink = SongObj.searchProvider(
                 songName,
                 contributingArtists,
-                albumName,
                 duration,
-                explicit=rawTrackMeta["explicit"],
             )
             if youtubeLink != None:
                 insert_link_entry(rawTrackMeta["id"],youtubeLink)
