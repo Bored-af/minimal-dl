@@ -56,8 +56,7 @@ class SongObj:
 
         for artist in rawTrackMeta["artists"]:
             contributingArtists.append(artist["name"])
-        # result = query_for_link(rawTrackMeta["id"])
-        result = ""
+        result = query_for_link(rawTrackMeta["id"])
         if len(result)!=0:
             youtubeLink = "https://www.youtube.com/watch?v="+result
         else:
