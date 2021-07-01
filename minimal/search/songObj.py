@@ -1,13 +1,9 @@
 from minimal.search.provider import search_and_get_best_match
 from minimal.search.spotifyClient import get_spotify_client
 from minimal.search.lyrics import Genius, worker_url
-
-from os.path import join
-
-from typing import List
-
 from minimal.mongodb import query_for_link,query_for_genius_link, insert_link_entry, insert_genius_link
 
+from typing import List
 
 class SongObj:
     #! This can be accessed as songObj.searchProvider. songObj acts like a namespace
