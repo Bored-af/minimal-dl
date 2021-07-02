@@ -456,9 +456,6 @@ class DownloadTracker:
 
         if songObj in self.songObjList:
             self.songObjList.remove(songObj)
-            if len(query_for_link(songObj.get_rawId())) == 0:
-                # the entry doesn't exist in the database
-                insert_link_entry(songObj.get_rawId(), songObj.get_youtube_link())
             if skipFile:
                 skipfile = open(path, "r")
                 links = []
