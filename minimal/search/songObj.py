@@ -42,29 +42,6 @@ class SongObj:
         albumId = rawTrackMeta["album"]["id"]
         rawAlbumMeta = spotifyClient.album(albumId)
 
-        # # get best match from the given provider
-        # songName = rawTrackMeta["name"]
-
-        # duration = round(rawTrackMeta["duration_ms"] / 1000, ndigits=3)
-
-        # contributingArtists = []
-
-        # for artist in rawTrackMeta["artists"]:
-        #     contributingArtists.append(artist["name"])
-        # # result = query_for_link(rawTrackMeta["id"])
-        # result = ""
-        # if len(result)!=0:
-        #     youtubeLink = "https://www.youtube.com/watch?v="+result
-        # else:
-        #     print("cache miss")
-        #     youtubeLink = SongObj.searchProvider(
-        #         songName,
-        #         contributingArtists,
-        #         duration,
-        #     )
-        #     if youtubeLink != None:
-        #         insert_link_entry(rawTrackMeta["id"],youtubeLink)
-
         return cls(rawTrackMeta, rawAlbumMeta, rawArtistMeta)
 
     @classmethod
