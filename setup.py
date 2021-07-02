@@ -1,7 +1,7 @@
 from setuptools import setup
 
 setup(
-    name="minimal-dl",
+    name="minimal",
     packages=[
         "minimal",
         "minimal.search",

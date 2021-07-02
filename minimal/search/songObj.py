@@ -13,11 +13,10 @@ class SongObj:
     # ====================
     # === Constructors ===
     # ====================
-    def __init__(self, rawTrackMeta, rawAlbumMeta, rawArtistMeta, youtubeLink):
+    def __init__(self, rawTrackMeta, rawAlbumMeta, rawArtistMeta):
         self.__rawTrackMeta = rawTrackMeta
         self.__rawAlbumMeta = rawArtistMeta
         self.__rawArtistMeta = rawArtistMeta
-        self.__youtubeLink = youtubeLink
 
     #! constructors here are a bit mucky, there are two different constructors for two
     #! different use cases, hence the actual __init__ function does not exist
@@ -43,38 +42,38 @@ class SongObj:
         albumId = rawTrackMeta["album"]["id"]
         rawAlbumMeta = spotifyClient.album(albumId)
 
-        # get best match from the given provider
-        songName = rawTrackMeta["name"]
+        # # get best match from the given provider
+        # songName = rawTrackMeta["name"]
 
-        duration = round(rawTrackMeta["duration_ms"] / 1000, ndigits=3)
+        # duration = round(rawTrackMeta["duration_ms"] / 1000, ndigits=3)
 
-        contributingArtists = []
+        # contributingArtists = []
 
-        for artist in rawTrackMeta["artists"]:
-            contributingArtists.append(artist["name"])
-        result = query_for_link(rawTrackMeta["id"])
-        if len(result)!=0:
-            youtubeLink = "https://www.youtube.com/watch?v="+result
-        else:
-            print("cache miss")
-            youtubeLink = SongObj.searchProvider(
-                songName,
-                contributingArtists,
-                duration,
-            )
-            if youtubeLink != None:
-                insert_link_entry(rawTrackMeta["id"],youtubeLink)
+        # for artist in rawTrackMeta["artists"]:
+        #     contributingArtists.append(artist["name"])
+        # # result = query_for_link(rawTrackMeta["id"])
+        # result = ""
+        # if len(result)!=0:
+        #     youtubeLink = "https://www.youtube.com/watch?v="+result
+        # else:
+        #     print("cache miss")
+        #     youtubeLink = SongObj.searchProvider(
+        #         songName,
+        #         contributingArtists,
+        #         duration,
+        #     )
+        #     if youtubeLink != None:
+        #         insert_link_entry(rawTrackMeta["id"],youtubeLink)
 
-        return cls(rawTrackMeta, rawAlbumMeta, rawArtistMeta, youtubeLink)
+        return cls(rawTrackMeta, rawAlbumMeta, rawArtistMeta)
 
     @classmethod
     def from_dump(cls, dataDump: dict):
         rawTrackMeta = dataDump["rawTrackMeta"]
         rawAlbumMeta = dataDump["rawAlbumMeta"]
         rawArtistMeta = dataDump["rawAlbumMeta"]
-        youtubeLink = dataDump["youtubeLink"]
 
-        return cls(rawTrackMeta, rawAlbumMeta, rawArtistMeta, youtubeLink)
+        return cls(rawTrackMeta, rawAlbumMeta, rawArtistMeta)
 
     def __eq__(self, comparedSong) -> bool:
         if comparedSong.get_data_dump() == self.get_data_dump():
@@ -87,7 +86,7 @@ class SongObj:
     # ================================
 
     def get_youtube_link(self) -> str:
-        return self.__youtubeLink
+        return SongObj.searchProvider(self.get_song_name(),self.get_contributing_artists(),self.get_duration())
 
     #! Song Details:
 
@@ -237,7 +236,6 @@ class SongObj:
         #! internally the only reason this exists is that it helps in saving to disk
 
         return {
-            "youtubeLink": self.__youtubeLink,
             "rawTrackMeta": self.__rawTrackMeta,
             "rawAlbumMeta": self.__rawAlbumMeta,
             "rawArtistMeta": self.__rawArtistMeta,
