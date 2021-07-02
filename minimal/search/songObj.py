@@ -1,7 +1,7 @@
 from minimal.search.provider import search_and_get_best_match
 from minimal.search.spotifyClient import get_spotify_client
 from minimal.search.lyrics import Genius, worker_url
-from minimal.mongodb import query_for_link,query_for_genius_link, insert_link_entry, insert_genius_link
+from minimal.mongodb import query_for_link,query_for_genius_link, insert_genius_link
 
 from typing import List
 
@@ -63,7 +63,12 @@ class SongObj:
     # ================================
 
     def get_youtube_link(self) -> str:
-        return SongObj.searchProvider(self.get_song_name(),self.get_contributing_artists(),self.get_duration())
+        watch_id = query_for_link(self.get_rawId())
+        if len(watch_id) == 0:
+            print("Cache Miss")
+            return SongObj.searchProvider(self.get_song_name(),self.get_contributing_artists(),self.get_duration())
+        else:
+            return "https://www.youtube.com/watch?v="+watch_id
 
     #! Song Details:
 
