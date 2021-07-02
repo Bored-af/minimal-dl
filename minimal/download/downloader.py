@@ -206,8 +206,7 @@ class DownloadManager:
                 # pytube.request.default_range_size = 524288
                 youtubeHandler = YouTube(
                     url=songObj.get_youtube_link(),
-                    on_progress_callback=displayProgressTracker.pytube_progress_hook,
-                    on_complete_callback=displayProgressTracker.notify_youtube_download_completion
+                    on_progress_callback=displayProgressTracker.pytube_progress_hook
                 )
             else:
                 youtubeHandler = YouTube(songObj.get_youtube_link())
@@ -217,6 +216,7 @@ class DownloadManager:
             downloadedFilePath = await self._download_from_youtube(
                 convertedFileName, tempFolder, trackAudioStream
             )
+            displayProgressTracker.notify_youtube_download_completion()
             if downloadedFilePath is None:
                 return None
 
@@ -242,20 +242,17 @@ class DownloadManager:
             # ! sampled length of songs matches the actual length (i.e. a 5 min song won't display
             # ! as 47 seconds long in your music player, yeah that was an issue earlier.)
 
-            command = f'ffmpeg -v quiet -y -i "{downloadedFilePath}" -acodec libmp3lame -abr true -af "apad=pad_dur=2" "{convertedFilePath}"'
-
-            process = await asyncio.subprocess.create_subprocess_shell(command)
+            command = f'ffmpeg -v debug -y -i "{downloadedFilePath}" -acodec libmp3lame -abr true -af "apad=pad_dur=2" "{convertedFilePath}"'
+            process = await asyncio.subprocess.create_subprocess_shell(command,stdout=asyncio.subprocess.PIPE,stderr=asyncio.subprocess.PIPE)
             _ = await process.communicate()
 
             # ! Wait till converted file is actually created
-            while True:
-                if exists(convertedFilePath):
-                    break
+            # while True:
+            #     if exists(abspath(convertedFilePath)):
+            #         break
 
             if self.displayManager:
                 displayProgressTracker.notify_conversion_completion()
-        else:
-            downloadedFilePath = None
 
         # embed song details
         # ! we save tags as both ID3 v2.3 and v2.4

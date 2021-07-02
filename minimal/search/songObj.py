@@ -56,7 +56,7 @@ class SongObj:
         if len(result)!=0:
             youtubeLink = "https://www.youtube.com/watch?v="+result
         else:
-            print("failed")
+            print("cache miss")
             youtubeLink = SongObj.searchProvider(
                 songName,
                 contributingArtists,
