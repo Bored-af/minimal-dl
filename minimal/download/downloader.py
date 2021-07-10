@@ -9,6 +9,7 @@ from os import mkdir, remove
 from os.path import join, exists, abspath
 
 from pytube import YouTube
+from pytube.exceptions import VideoUnavailable, VideoRegionBlocked, VideoPrivate
 import pytube.request 
 
 from mutagen.easyid3 import EasyID3, ID3
@@ -24,6 +25,7 @@ from minimal.search.songObj import SongObj
 from minimal.download.progressHandlers import DisplayManager, DownloadTracker
 from minimal.search.sessionClient import get_session
 from minimal.search.utils import path
+from minimal.mongodb import unset_link_entry
 
 
 # ==========================
@@ -154,7 +156,7 @@ class DownloadManager:
         convertedFileName = artistStr[:-2] + " - " + songObj.get_song_name()
 
         # ! this is windows specific (disallowed chars)
-        for disallowedChar in ["/", "?","\"", "\\", "*", "|", "<", ">"]:
+        for disallowedChar in ["/", "?","\"", "\\", "*", "|", "<", ">", "$"]:
             if disallowedChar in convertedFileName:
                 convertedFileName = convertedFileName.replace(disallowedChar, "")
 
@@ -203,15 +205,30 @@ class DownloadManager:
         if addMetadata == False:
             # download Audio from YouTube
             if self.displayManager:
-                # pytube.request.default_range_size = 524288
                 youtubeHandler = YouTube(
                     url=songObj.get_youtube_link(),
                     on_progress_callback=displayProgressTracker.pytube_progress_hook
                 )
             else:
                 youtubeHandler = YouTube(songObj.get_youtube_link())
-
-            trackAudioStream = youtubeHandler.streams.get_audio_only()
+            try:
+                trackAudioStream = youtubeHandler.streams.get_audio_only()
+            except (VideoUnavailable,VideoPrivate, VideoRegionBlocked):
+                if unset_link_entry(songObj.get_rawId()):
+                    print(f"Unset link for {songObj.get_song_name()}")
+                else:
+                    print(f"failed to unset the link entry for {songObj.get_song_name()}")
+                youtubeHandler = YouTube(songObj.get_youtube_link())
+                try:
+                    youtubeHandler = YouTube(songObj.get_youtube_link())
+                    trackAudioStream = youtubeHandler.streams.get_audio_only()
+                except:
+                    print(f"Unable to download the audio for {songObj.get_song_name()}")
+                    if self.displayManager:
+                        displayProgressTracker.notify_download_skip()
+                    if self.downloadTracker:
+                        self.downloadTracker.notify_download_completion(songObj)
+                    return None
 
             downloadedFilePath = await self._download_from_youtube(
                 convertedFileName, tempFolder, trackAudioStream
@@ -253,7 +270,8 @@ class DownloadManager:
 
             if self.displayManager:
                 displayProgressTracker.notify_conversion_completion()
-
+        else:
+            downloadedFilePath = None
         # embed song details
         # ! we save tags as both ID3 v2.3 and v2.4
         # ! The simple ID3 tags
