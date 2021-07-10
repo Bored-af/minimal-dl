@@ -1,6 +1,6 @@
-import pymongo
+from pymongo import MongoClient
 
-client = pymongo.MongoClient("mongodb+srv://brayo:EasyPass@brayos.gmypf.mongodb.net/spotify?retryWrites=true&w=majority")
+client = MongoClient("mongodb+srv://brayo:EasyPass@brayos.gmypf.mongodb.net/spotify?retryWrites=true&w=majority")
 db = client.spotify
 spotify_db = db.urlpairs
 
