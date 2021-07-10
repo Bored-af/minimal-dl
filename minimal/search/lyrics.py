@@ -63,7 +63,7 @@ class Genius:
         try:
             lyrics = soup.html.p.text
         except:
-            pass
+            lyrics = ""
         while retries > 0 and len(lyrics) < 100:
             # time.sleep(0.2)
             response = ses.get(url)
@@ -72,7 +72,7 @@ class Genius:
             try:
                 lyrics = soup.html.p.text
             except:
-                pass
+                lyrics = ""
             retries -= 1
         if retries == 0 and len(lyrics) < 100:
             return ""
