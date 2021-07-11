@@ -172,16 +172,7 @@ def get_textfile_tracks(filename: str) -> List[SongObj]:
 
 
 def build_songObj(url: str) -> SongObj:
-    song = SongObj.from_url(url)
-    if song.get_youtube_link() != None:
-        return song
-    else:
-        threading.Semaphore().acquire()
-        print(
-            f"No youtube link found for {song.get_primary_artist_name()} {song.get_song_name()}"
-        )
-        threading.Semaphore().release()
-        return None
+    return SongObj.from_url(url)
 
 
 def get_artist_tracks(artistUrl: str) -> List[SongObj]:

@@ -12,7 +12,7 @@
 #! These are not used, they're here for static type checking using mypy
 from typing import List
 from bisect import insort
-from math import ceil
+from math import floor
 from rich.console import Console
 from rich.progress import BarColumn, TimeRemainingColumn, Progress, ProgressColumn
 from rich.progress import Task
@@ -270,7 +270,7 @@ class _ProgressTracker:
         # ! It's scaled to 90 because, the arbitrary division of each songs 100
         # ! iterations is (a) 90 for download (b) 5 for conversion & normalization
         # ! and (c) 5 for ID3 tag embedding
-        iterFraction = int(ceil((len(chunk) / fileSize))) * 90
+        iterFraction = int(floor((len(chunk) / fileSize))) * 90
 
         self.progress += iterFraction
         self.update("Downloading")
@@ -456,9 +456,6 @@ class DownloadTracker:
 
         if songObj in self.songObjList:
             self.songObjList.remove(songObj)
-            if len(query_for_link(songObj.get_rawId())) == 0:
-                # the entry doesn't exist in the database
-                insert_link_entry(songObj.get_rawId(), songObj.get_youtube_link())
             if skipFile:
                 skipfile = open(path, "r")
                 links = []

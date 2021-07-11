@@ -60,7 +60,12 @@ class Genius:
         response.raise_for_status()
         soup = BeautifulSoup(response.text, features="lxml")
         retries = 3
-        lyrics = soup.html.p.text
+
+        try:
+            lyrics = soup.html.p.text
+        except:
+            lyrics = ""
+
         while retries > 0 and len(lyrics) < 100:
             # time.sleep(0.2)
             response = ses.get(url)
@@ -69,7 +74,7 @@ class Genius:
             try:
                 lyrics = soup.html.p.text
             except:
-                pass
+                lyrics = ""
             retries -= 1
         if retries == 0 and len(lyrics) < 100:
             return ""

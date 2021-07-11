@@ -1,13 +1,15 @@
-import pymongo
+from pymongo import MongoClient
 
-client = pymongo.MongoClient("mongodb+srv://brayo:EasyPass@brayos.gmypf.mongodb.net/spotify?retryWrites=true&w=majority")
+client = MongoClient("mongodb+srv://brayo:EasyPass@brayos.gmypf.mongodb.net/spotify?retryWrites=true&w=majority")
 db = client.spotify
 spotify_db = db.urlpairs
 
 def query_for_link(id:str)->str:
     result = spotify_db.find_one({"spotify_id":id})
     if result != None:
-        return result["yt_url"]
+        link = result["yt_url"]
+        if link != None:
+            return link
     else:
         return ""
 
@@ -22,6 +24,12 @@ def insert_link_entry(id:str, yt_url:str):
         spotify_db.insert_one(json_document)
     except:
         pass
+
+def unset_link_entry(id:str) -> bool:
+    result = spotify_db.find_one_and_update({"spotify_id":f"{id}"}, {"$set":{"yt_url":""}})
+    if result != None:
+        return True
+    return False
 
 def insert_genius_link(id:str,genius_url:str) -> bool:
     if spotify_db.find_one({"spotify_id":f"{id}"}) != None:
