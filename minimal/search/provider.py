@@ -193,9 +193,9 @@ def search_and_order_ytm_results(
         nonMatchValue = (delta ** 2) / songDuration * 100
 
         timeMatch = 100 - nonMatchValue
-
+        
         # the results along with the avg Match
-        avgMatch = (nameMatch + timeMatch) / 2
+        avgMatch = (nameMatch + timeMatch*3) / 4
 
         linksWithMatchValue[result["link"]] = avgMatch
 
