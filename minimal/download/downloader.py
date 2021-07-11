@@ -148,10 +148,13 @@ class DownloadManager:
         # ! we eliminate contributing artist names that are also in the song name, else we
         # ! would end up with things like 'Jetta, Mastubs - I'd love to change the world
         # ! (Mastubs REMIX).mp3' which is kinda an odd file name.
-        for artist in songObj.get_contributing_artists():
-            if artist.lower() not in songObj.get_song_name().lower():
-                artistStr += artist + ", "
-
+        artists = songObj.get_contributing_artists()
+        if len(artists) != 0:
+            for artist in artists:
+                if artist.lower() not in songObj.get_song_name().lower():
+                    artistStr += artist + ", "
+        else:
+            artistStr = songObj.get_primary_artist_name()
         # ! the ...[:-2] is to avoid the last ', ' appended to artistStr
         convertedFileName = artistStr[:-2] + " - " + songObj.get_song_name()
 
