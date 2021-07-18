@@ -310,7 +310,7 @@ class _ProgressTracker:
     def metadata_route_completion(self) -> None:
         """done with metadata """
         self.progress = 100
-        self.update("Done with embedding")
+        self.update("Embedding done")
 
     def notify_error(self, e, tb):
         """
