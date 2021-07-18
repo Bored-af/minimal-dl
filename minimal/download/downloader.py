@@ -168,7 +168,6 @@ class DownloadManager:
         convertedFileName = convertedFileName.replace('"', "'").replace(": ", " - ")
 
         convertedFilePath = join(".", convertedFileName) + ".mp3"
-        addMetadata = False
         absPath = abspath(convertedFilePath)
         # if a song is already downloaded skip it
         if exists(convertedFilePath):
@@ -190,100 +189,109 @@ class DownloadManager:
                 "originaldate",
             ]:
                 if audioFile.get(i) == None:
-                    addMetadata = True
-                    break
-            if addMetadata == False:
-                audioFile = ID3(absPath)
-                if len(audioFile.items()) < 10:
-                    addMetadata = True
-            if addMetadata == False:
+                    self.embed_metadata(songObj, absPath)
+                    if self.displayManager:
+                        displayProgressTracker.metadata_route_completion()
+                    return None
+            
+            audioFile = ID3(absPath)
+            if len(audioFile.items()) < 10:
+                self.embed_metadata(songObj, absPath)
+                displayProgressTracker.metadata_route_completion()
+                return None
+            if self.displayManager:
+                displayProgressTracker.notify_download_skip()
+            if self.downloadTracker:
+                self.downloadTracker.notify_download_completion(songObj)
+            # print(f"skipping {songObj.get_primary_artist_name()} - {songObj.get_song_name()}")
+            # ! None is the default return value of all functions, we just explicitly define
+            # ! it here as a continent way to avoid executing the rest of the function.
+            return None
+        # download Audio from YouTube
+        if self.displayManager:
+            youtubeHandler = YouTube(
+                url=songObj.get_youtube_link(),
+                on_progress_callback=displayProgressTracker.pytube_progress_hook
+            )
+        else:
+            youtubeHandler = YouTube(songObj.get_youtube_link())
+        try:
+            trackAudioStream = youtubeHandler.streams.get_audio_only()
+        except (VideoUnavailable,VideoPrivate, VideoRegionBlocked):
+            if unset_link_entry(songObj.get_rawId()):
+                print(f"Unset link for {songObj.get_song_name()}")
+            else:
+                print(f"failed to unset the link entry for {songObj.get_song_name()}")
+            youtubeHandler = YouTube(songObj.get_youtube_link())
+            try:
+                youtubeHandler = YouTube(songObj.get_youtube_link())
+                trackAudioStream = youtubeHandler.streams.get_audio_only()
+            except:
+                print(f"Unable to download the audio for {songObj.get_song_name()}")
                 if self.displayManager:
                     displayProgressTracker.notify_download_skip()
                 if self.downloadTracker:
                     self.downloadTracker.notify_download_completion(songObj)
-                # print(f"skipping {songObj.get_primary_artist_name()} - {songObj.get_song_name()}")
-                # ! None is the default return value of all functions, we just explicitly define
-                # ! it here as a continent way to avoid executing the rest of the function.
-                return None
-        if addMetadata == False:
-            # download Audio from YouTube
-            if self.displayManager:
-                youtubeHandler = YouTube(
-                    url=songObj.get_youtube_link(),
-                    on_progress_callback=displayProgressTracker.pytube_progress_hook
-                )
-            else:
-                youtubeHandler = YouTube(songObj.get_youtube_link())
-            try:
-                trackAudioStream = youtubeHandler.streams.get_audio_only()
-            except (VideoUnavailable,VideoPrivate, VideoRegionBlocked):
-                if unset_link_entry(songObj.get_rawId()):
-                    print(f"Unset link for {songObj.get_song_name()}")
-                else:
-                    print(f"failed to unset the link entry for {songObj.get_song_name()}")
-                youtubeHandler = YouTube(songObj.get_youtube_link())
-                try:
-                    youtubeHandler = YouTube(songObj.get_youtube_link())
-                    trackAudioStream = youtubeHandler.streams.get_audio_only()
-                except:
-                    print(f"Unable to download the audio for {songObj.get_song_name()}")
-                    if self.displayManager:
-                        displayProgressTracker.notify_download_skip()
-                    if self.downloadTracker:
-                        self.downloadTracker.notify_download_completion(songObj)
-                    return None
-
-            downloadedFilePath = await self._download_from_youtube(
-                convertedFileName, tempFolder, trackAudioStream
-            )
-            displayProgressTracker.notify_youtube_download_completion()
-            if downloadedFilePath is None:
                 return None
 
-            # convert downloaded file to MP3 with normalization
+        downloadedFilePath = await self._download_from_youtube(
+            convertedFileName, tempFolder, trackAudioStream
+        )
+        displayProgressTracker.notify_youtube_download_completion()
+        if downloadedFilePath is None:
+            return None
 
-            # ! -af loudnorm=I=-7:LRA applies EBR 128 loudness normalization algorithm with
-            # ! intergrated loudness target (I) set to -17, using values lower than -15
-            # ! causes 'pumping' i.e. rhythmic variation in loudness that should not
-            # ! exist -loud parts exaggerate, soft parts left alone.
-            # !
-            # ! dynaudnorm applies dynamic non-linear RMS based normalization, this is what
-            # ! actually normalized the audio. The loudnorm filter just makes the apparent
-            # ! loudness constant
-            # !
-            # ! apad=pad_dur=2 adds 2 seconds of silence toward the end of the track, this is
-            # ! done because the loudnorm filter clips/cuts/deletes the last 1-2 seconds on
-            # ! occasion especially if the song is EDM-like, so we add a few extra seconds to
-            # ! combat that.
-            # !
-            # ! -acodec libmp3lame sets the encoded to 'libmp3lame' which is far better
-            # ! than the default 'mp3_mf', '-abr true' automatically determines and passes the
-            # ! audio encoding bitrate to the filters and encoder. This ensures that the
-            # ! sampled length of songs matches the actual length (i.e. a 5 min song won't display
-            # ! as 47 seconds long in your music player, yeah that was an issue earlier.)
+        # convert downloaded file to MP3 with normalization
 
-            command = f'ffmpeg -v debug -y -i "{downloadedFilePath}" -acodec libmp3lame -abr true -af "apad=pad_dur=2" "{convertedFilePath}"'
-            process = await asyncio.subprocess.create_subprocess_shell(command,stdout=asyncio.subprocess.PIPE,stderr=asyncio.subprocess.PIPE)
-            _ = await process.communicate()
+        # ! -af loudnorm=I=-7:LRA applies EBR 128 loudness normalization algorithm with
+        # ! intergrated loudness target (I) set to -17, using values lower than -15
+        # ! causes 'pumping' i.e. rhythmic variation in loudness that should not
+        # ! exist -loud parts exaggerate, soft parts left alone.
+        # !
+        # ! dynaudnorm applies dynamic non-linear RMS based normalization, this is what
+        # ! actually normalized the audio. The loudnorm filter just makes the apparent
+        # ! loudness constant
+        # !
+        # ! apad=pad_dur=2 adds 2 seconds of silence toward the end of the track, this is
+        # ! done because the loudnorm filter clips/cuts/deletes the last 1-2 seconds on
+        # ! occasion especially if the song is EDM-like, so we add a few extra seconds to
+        # ! combat that.
+        # !
+        # ! -acodec libmp3lame sets the encoded to 'libmp3lame' which is far better
+        # ! than the default 'mp3_mf', '-abr true' automatically determines and passes the
+        # ! audio encoding bitrate to the filters and encoder. This ensures that the
+        # ! sampled length of songs matches the actual length (i.e. a 5 min song won't display
+        # ! as 47 seconds long in your music player, yeah that was an issue earlier.)
 
-            # ! Wait till converted file is actually created
-            # while True:
-            #     if exists(abspath(convertedFilePath)):
-            #         break
+        command = f'ffmpeg -v debug -y -i "{downloadedFilePath}" -acodec libmp3lame -abr true -af "apad=pad_dur=2" "{convertedFilePath}"'
+        process = await asyncio.subprocess.create_subprocess_shell(command,stdout=asyncio.subprocess.PIPE,stderr=asyncio.subprocess.PIPE)
+        _ = await process.communicate()
 
-            if self.displayManager:
-                displayProgressTracker.notify_conversion_completion()
-        else:
-            downloadedFilePath = None
-        # embed song details
-        # ! we save tags as both ID3 v2.3 and v2.4
-        # ! The simple ID3 tags
+        # ! Wait till converted file is actually created
+        # while True:
+        #     if exists(abspath(convertedFilePath)):
+        #         break
+
+        if self.displayManager:
+            displayProgressTracker.notify_conversion_completion()
+        
+        self.embed_metadata(songObj, absPath)
+
+        # Do the necessary cleanup
+        if self.displayManager:
+            displayProgressTracker.notify_download_completion()
+
+        if self.downloadTracker:
+            self.downloadTracker.notify_download_completion(songObj)
+        if downloadedFilePath == None:
+            return None
+        # delete the unnecessary YouTube download File
+        if exists(downloadedFilePath):
+            remove(downloadedFilePath)
+
+    def embed_metadata(self, songObj:SongObj, absPath:str) -> None:
         audioFile = EasyID3(absPath)
-
-        # ! Get rid of all existing ID3 tags (if any exist)
         audioFile.delete()
-
-        # ! song name
         audioFile["title"] = songObj.get_song_name()
         audioFile["titlesort"] = songObj.get_song_name()
 
@@ -291,8 +299,6 @@ class DownloadManager:
         audioFile["tracknumber"] = str(songObj.get_track_number())
 
         # ! genres (pretty pointless if you ask me)
-        # ! we only apply the first available genre as ID3 v2.3 doesn't support multiple
-        # ! genres and ~80% of the world PC's run Windows - an OS with no ID3 v2.4 support
         genres = songObj.get_genres()
 
         if len(genres) > 0:
@@ -314,19 +320,14 @@ class DownloadManager:
         # ! save as both ID3 v2.3 & v2.4 as v2.3 isn't fully features and
         # ! windows doesn't support v2.4 until later versions of Win10
         audioFile.save(v2_version=3)
-
-        # ! setting the album art
         audioFile = ID3(absPath)
 
         rawAlbumArt = ses.get(songObj.get_album_cover_url()).content
-        if addMetadata and self.displayManager:
-            displayProgressTracker.metadata_route_albumart()
 
         audioFile["APIC"] = AlbumCover(
             encoding=3, mime="image/jpeg", type=3, desc="Cover", data=rawAlbumArt
         )
-        # fetching lyrics can fail due to network issues, we can recover
-        # from this and do it refetch them when running the code
+        # actually fetches the lyrics latency could be huge
         lyrics = songObj.get_lyrics()
         if len(lyrics)==0:
             lyrics = "Failed to fetch lyrics"
@@ -334,20 +335,6 @@ class DownloadManager:
         audioFile["USLT::'eng'"] = USLTOutput
 
         audioFile.save(v2_version=3)
-
-        # Do the necessary cleanup
-        if self.displayManager and not addMetadata:
-            displayProgressTracker.notify_download_completion()
-
-        if self.downloadTracker and not addMetadata:
-            self.downloadTracker.notify_download_completion(songObj)
-        if addMetadata and self.displayManager:
-            displayProgressTracker.metadata_route_completion()
-        if downloadedFilePath == None:
-            return None
-        # delete the unnecessary YouTube download File
-        if exists(downloadedFilePath):
-            remove(downloadedFilePath)
 
     def close(self) -> None:
         """

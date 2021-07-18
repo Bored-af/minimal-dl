@@ -79,7 +79,7 @@ class Genius:
         if retries == 0 and len(lyrics) < 100:
             return ""
         return soup.html.p.text
-    @classmethod
+
     def verify_status_code(self, response_json:dict):
         if response_json["meta"]["status"] != 200:
             print (f"error json_status_code is {response_json['meta']['status']}")
@@ -97,7 +97,7 @@ class Genius:
         search_url = base_search_url + encoded_query
         Ses = self.get_session()
         response_json = Ses.get(search_url).json()
-        self.verify_status_code(response_json)
+        self.verify_status_code(self, response_json)
         for i in range(0, len(response_json["response"]["hits"])):
             url = str(response_json["response"]["hits"][i]["result"]["path"])
             formatted_url = url.replace("-", " ").lower()
