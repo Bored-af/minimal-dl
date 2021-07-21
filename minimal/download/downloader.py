@@ -16,7 +16,6 @@ from mutagen.easyid3 import EasyID3, ID3
 from mutagen.id3 import APIC as AlbumCover, ID3NoHeaderError
 from mutagen.id3 import USLT
 
-from requests import get
 
 #! The following are not used, they are just here for static typechecking with mypy
 from typing import List

@@ -51,3 +51,6 @@ def query_for_genius_link(id:str)->str:
 def wrapper_for_findAny():
     result = spotify_db.find_one()
     return result
+
+def drop_collection():
+    spotify_db.drop()
