@@ -297,7 +297,7 @@ class DownloadManager:
         # ! track number
         audioFile["tracknumber"] = str(songObj.get_track_number())
 
-        # ! genres (pretty pointless if you ask me)
+        # ! genres 
         genres = songObj.get_genres()
 
         if len(genres) > 0:

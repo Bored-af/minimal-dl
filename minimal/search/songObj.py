@@ -69,6 +69,7 @@ class SongObj:
         print("Cache Miss")
         link = SongObj.searchProvider(self.get_song_name(),self.get_contributing_artists(),self.get_duration())
         insert_link_entry(self.get_rawId(),link)
+        print(link)
         return link
 
     #! Song Details:
