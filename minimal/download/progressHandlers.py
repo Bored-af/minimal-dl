@@ -3,7 +3,6 @@
 # ===============
 
 
-
 #! we need to import the whole shebang here to patch multiprocessing's AutoProxy.
 #! Attempting to use a displayManager across multiple processes without the
 #! patch will result in a 'Key Error: Autoproxy takes no key argument manager_owned'
@@ -32,9 +31,10 @@ from typing import (
 )
 
 from minimal.config import path, skipFile
-from minimal.mongodb import query_for_link,insert_link_entry
+from minimal.mongodb import query_for_link, insert_link_entry
 from minimal.search.songObj import SongObj
 from minimal.search.utils import song_present
+
 # =============
 # === Theme ===
 # =============
@@ -314,7 +314,7 @@ class _ProgressTracker:
         self.update("Embedding")
 
     def metadata_route_completion(self) -> None:
-        """done with metadata """
+        """done with metadata"""
         self.progress = 100
         self.update("Embedding done")
 
@@ -468,17 +468,16 @@ class DownloadTracker:
                 links = [line for line in skipfile]
                 links.sort()
                 skipfile.close()
-                url = songObj.get_link() +"\n"
+                url = songObj.get_link() + "\n"
                 if not song_present(url, links):
-                     insort(links,url)
-                     file = open(path, "a")
-                     file.truncate(0)
-                     file.seek(0)
-                     file.writelines(links)
-                     file.close()
+                    insort(links, url)
+                    file = open(path, "a")
+                    file.truncate(0)
+                    file.seek(0)
+                    file.writelines(links)
+                    file.close()
         self.backup_to_disk()
 
     def clear(self):
         self.songObjList = []
         self.saveFile = None
-
