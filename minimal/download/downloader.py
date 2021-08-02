@@ -8,10 +8,7 @@ import sys
 from os import mkdir, remove
 from os.path import join, exists, abspath
 
-from pytube import YouTube
-from pytube.exceptions import VideoUnavailable, VideoRegionBlocked, VideoPrivate
-import pytube.request 
-
+from pafy import new as youtube
 from mutagen.easyid3 import EasyID3, ID3
 from mutagen.id3 import APIC as AlbumCover, ID3NoHeaderError
 from mutagen.id3 import USLT
@@ -33,7 +30,6 @@ from minimal.mongodb import unset_link_entry
 ses = get_session()
 path = path
 skipfile = open(path, "a")
-pytube.request.default_range_size = 1048576
 # ===========================================================
 # === The Download Manager (the tyrannical boss lady/guy) ===
 # ===========================================================
@@ -49,8 +45,6 @@ class DownloadManager:
         self.displayManager = DisplayManager()
         self.downloadTracker = DownloadTracker()
         self.skipfile = skipfile
-
-        
 
         if sys.platform == "win32":
             #! ProactorEventLoop is required on Windows to run subprocess asynchronously
@@ -158,7 +152,7 @@ class DownloadManager:
         convertedFileName = artistStr[:-2] + " - " + songObj.get_song_name()
 
         # ! this is windows specific (disallowed chars)
-        for disallowedChar in ["/", "?","\"", "\\", "*", "|", "<", ">", "$"]:
+        for disallowedChar in ["/", "?", '"', "\\", "*", "|", "<", ">", "$"]:
             if disallowedChar in convertedFileName:
                 convertedFileName = convertedFileName.replace(disallowedChar, "")
 
@@ -192,7 +186,7 @@ class DownloadManager:
                     if self.displayManager:
                         displayProgressTracker.metadata_route_completion()
                     return None
-            
+
             audioFile = ID3(absPath)
             if len(audioFile.items()) < 10:
                 self.embed_metadata(songObj, absPath)
@@ -243,7 +237,9 @@ class DownloadManager:
         # ! as 47 seconds long in your music player, yeah that was an issue earlier.)
 
         command = f'ffmpeg -v debug -y -i "{downloadedFilePath}" -acodec libmp3lame -abr true -af "apad=pad_dur=2" "{convertedFilePath}"'
-        process = await asyncio.subprocess.create_subprocess_shell(command,stdout=asyncio.subprocess.PIPE,stderr=asyncio.subprocess.PIPE)
+        process = await asyncio.subprocess.create_subprocess_shell(
+            command, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
+        )
         _ = await process.communicate()
 
         # ! Wait till converted file is actually created
@@ -253,7 +249,7 @@ class DownloadManager:
 
         if self.displayManager:
             displayProgressTracker.notify_conversion_completion()
-        
+
         self.embed_metadata(songObj, absPath)
 
         # Do the necessary cleanup
@@ -268,7 +264,7 @@ class DownloadManager:
         if exists(downloadedFilePath):
             remove(downloadedFilePath)
 
-    def embed_metadata(self, songObj:SongObj, absPath:str) -> None:
+    def embed_metadata(self, songObj: SongObj, absPath: str) -> None:
         audioFile = EasyID3(absPath)
         audioFile.delete()
         audioFile["title"] = songObj.get_song_name()
@@ -277,7 +273,7 @@ class DownloadManager:
         # ! track number
         audioFile["tracknumber"] = str(songObj.get_track_number())
 
-        # ! genres 
+        # ! genres
         genres = songObj.get_genres()
 
         if len(genres) > 0:
@@ -308,7 +304,7 @@ class DownloadManager:
         )
         # actually fetches the lyrics latency could be huge
         lyrics = songObj.get_lyrics()
-        if len(lyrics)==0:
+        if len(lyrics) == 0:
             lyrics = "Failed to fetch lyrics"
         USLTOutput = USLT(encoding=3, lang="eng", desc="desc", text=lyrics)
         audioFile["USLT::'eng'"] = USLTOutput
