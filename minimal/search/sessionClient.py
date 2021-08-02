@@ -12,7 +12,11 @@ def get_session():
         return masterSession
     else:
         masterSession = session()
-        masterSession.headers.update({"User-Agent":"Mozilla/5.0 (compatible; FriendlyLilBot/0.1; +https://github.com/brayo-pip)"})
+        masterSession.headers.update(
+            {
+                "User-Agent": "Mozilla/5.0 (compatible; FriendlyLilBot/0.1; +https://github.com/brayo-pip)"
+            }
+        )
         return masterSession
 
 

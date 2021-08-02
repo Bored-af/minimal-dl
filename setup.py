@@ -52,5 +52,7 @@ setup(
         "Topic :: Multimedia :: Sound/Audio",
         "Topic :: Utilities",
     ],
-    entry_points={"console_scripts": ["minimal = minimal.__main__:console_entry_point"]},
+    entry_points={
+        "console_scripts": ["minimal = minimal.__main__:console_entry_point"]
+    },
 )

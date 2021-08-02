@@ -1,9 +1,15 @@
 from minimal.search.provider import search_and_get_best_match
 from minimal.search.spotifyClient import get_spotify_client
 from minimal.search.lyrics import Genius, worker_url
-from minimal.mongodb import query_for_link,query_for_genius_link, insert_genius_link, insert_link_entry
+from minimal.mongodb import (
+    query_for_link,
+    query_for_genius_link,
+    insert_genius_link,
+    insert_link_entry,
+)
 
 from typing import List
+
 
 class SongObj:
     #! This can be accessed as songObj.searchProvider. songObj acts like a namespace
@@ -65,10 +71,12 @@ class SongObj:
     def get_youtube_link(self) -> str:
         watch_id = query_for_link(self.get_rawId())
         if len(watch_id) != 0:
-            return "https://www.youtube.com/watch?v="+watch_id
+            return "https://www.youtube.com/watch?v=" + watch_id
         print("Cache Miss")
-        link = SongObj.searchProvider(self.get_song_name(),self.get_contributing_artists(),self.get_duration())
-        insert_link_entry(self.get_rawId(),link)
+        link = SongObj.searchProvider(
+            self.get_song_name(), self.get_contributing_artists(), self.get_duration()
+        )
+        insert_link_entry(self.get_rawId(), link)
         print(link)
         return link
 
@@ -141,7 +149,7 @@ class SongObj:
     def get_link(self) -> str:
         url = "https://open.spotify.com/track/" + self.__rawTrackMeta["id"]
         return url
-    
+
     def get_rawId(self) -> str:
         return self.__rawTrackMeta["id"]
 
@@ -232,14 +240,16 @@ class SongObj:
         artists = self.get_contributing_artists()
         genius_url = query_for_genius_link(self.get_rawId())
         if genius_url == "None":
-            lyrics, genius_url = Genius.lyrics_driver_method(primary_artist=artistName,song=songName,artists=artists)
-            insert_genius_link(id= self.get_rawId(),genius_url=genius_url)
+            lyrics, genius_url = Genius.lyrics_driver_method(
+                primary_artist=artistName, song=songName, artists=artists
+            )
+            insert_genius_link(id=self.get_rawId(), genius_url=genius_url)
         else:
-            lyrics = Genius.from_url(worker_url+genius_url)
+            lyrics = Genius.from_url(worker_url + genius_url)
         return lyrics
 
     def get_genius_url(self) -> str:
         """meant for internal use only"""
         songName = self.get_stripped_song_name()
         artistName = self.get_primary_artist_name()
-        return Genius.get_url(song=songName,artist=artistName)
+        return Genius.get_url(song=songName, artist=artistName)

@@ -70,7 +70,6 @@ def match_percentage(str1: str, str2: str, score_cutoff: float = 0) -> float:
 # ! YTMusic api client
 
 
-
 def __parse_duration(duration: str) -> float:
     try:
         if len(duration) > 5:
@@ -98,7 +97,6 @@ def __map_result_to_song_data(result: dict) -> dict:
     return song_data
 
 
-
 def __query_and_simplify(searchTerm: str) -> List[dict]:
     """
     `str` `searchTerm` : the search term you would type into YTM's search bar
@@ -111,16 +109,16 @@ def __query_and_simplify(searchTerm: str) -> List[dict]:
     # ! For dict structure, see end of this function (~ln 268, ln 283) and chill, this
     # ! function ain't soo big, there are plenty of comments and blank lines
 
-
-    result = CustomSearch(searchTerm, VideoSortOrder.relevance, limit= 5, region="KE").result()
-    searchResult = result['result']
+    result = CustomSearch(
+        searchTerm, VideoSortOrder.relevance, limit=5, region="KE"
+    ).result()
+    searchResult = result["result"]
     return list(map(__map_result_to_song_data, searchResult))
 
 
 # =======================
 # === Search Provider ===
 # =======================
-
 
 
 def search_and_order_ytm_results(
@@ -180,7 +178,6 @@ def search_and_order_ytm_results(
         if not commonWord:
             continue
 
-
         # Find name match
         nameMatch = round(match_percentage(result["name"], songName), ndigits=3)
 
@@ -193,9 +190,9 @@ def search_and_order_ytm_results(
         nonMatchValue = (delta ** 2) / songDuration * 100
 
         timeMatch = 100 - nonMatchValue
-        
+
         # the results along with the avg Match
-        avgMatch = (nameMatch + timeMatch*3) / 4
+        avgMatch = (nameMatch + timeMatch * 3) / 4
 
         linksWithMatchValue[result["link"]] = avgMatch
 
@@ -226,7 +223,9 @@ def search_and_get_best_match(
 
     # ! This is lazy coding, sorry.
     results = search_and_order_ytm_results(
-        songName, songArtists, songDuration,
+        songName,
+        songArtists,
+        songDuration,
     )
 
     if len(results) == 0:

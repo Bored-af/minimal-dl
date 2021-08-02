@@ -23,7 +23,7 @@ links.sort()
 
 
 def song_present(url: str, links: List):
-    index = bisect_left(links,url)
+    index = bisect_left(links, url)
     if index != len(links):
         if links[index] == url:
             return True

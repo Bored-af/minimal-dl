@@ -154,7 +154,6 @@ def console_entry_point():
                 print('No song named "%s" could be found on spotify' % request)
 
 
-
 if __name__ == "__main__":
     freeze_support()
 

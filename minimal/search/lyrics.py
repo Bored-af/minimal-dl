@@ -43,7 +43,7 @@ class Genius:
             lyrics = self.from_url(lyric_url)
             if lyrics == "":
                 continue
-            return lyrics , url
+            return lyrics, url
         lyrics = ""
         url = ""
         return lyrics, url
@@ -80,9 +80,9 @@ class Genius:
             return ""
         return soup.html.p.text
 
-    def verify_status_code(self, response_json:dict):
+    def verify_status_code(self, response_json: dict):
         if response_json["meta"]["status"] != 200:
-            print (f"error json_status_code is {response_json['meta']['status']}")
+            print(f"error json_status_code is {response_json['meta']['status']}")
 
     @classmethod
     def get_url(self, artist: str, song: str) -> str:
@@ -107,18 +107,20 @@ class Genius:
             return url
 
     @classmethod
-    def lyrics_driver_method(self, primary_artist: str, song: str, artists:list = None)->str:
+    def lyrics_driver_method(
+        self, primary_artist: str, song: str, artists: list = None
+    ) -> str:
         lyrics, url = self.from_query(artist=primary_artist, song=song)
-        if len(lyrics)==0 and artists != None:
+        if len(lyrics) == 0 and artists != None:
             for artist in artists:
-                lyrics, url = self.from_query(artist,song)
+                lyrics, url = self.from_query(artist, song)
                 if len(lyrics) == 0:
                     continue
                 else:
-                    return lyrics,url
+                    return lyrics, url
             # repeat the process
             for artist in artists:
-                lyrics, url = self.from_query(artist,song)
+                lyrics, url = self.from_query(artist, song)
                 if len(lyrics) == 0:
                     continue
                 else:
