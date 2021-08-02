@@ -270,9 +270,15 @@ class _ProgressTracker:
         # ! It's scaled to 90 because, the arbitrary division of each songs 100
         # ! iterations is (a) 90 for download (b) 5 for conversion & normalization
         # ! and (c) 5 for ID3 tag embedding
-        iterFraction = int(floor((len(chunk) / fileSize))) * 90
+        iterFraction = int(floor((len(chunk) / fileSize)) * 90)
 
         self.progress += iterFraction
+        self.update("Downloading")
+
+    def pafy_progress_hook(self, total, downloaded, ratio, rate, eta) -> None:
+        iterFraction = int(ratio * 90)
+
+        self.progress = iterFraction
         self.update("Downloading")
 
     def notify_youtube_download_completion(self) -> None:
