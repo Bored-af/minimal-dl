@@ -207,34 +207,14 @@ class DownloadManager:
             # ! it here as a continent way to avoid executing the rest of the function.
             return None
         # download Audio from YouTube
+        url = songObj.get_youtube_link()
         if self.displayManager:
-            youtubeHandler = YouTube(
-                url=songObj.get_youtube_link(),
-                on_progress_callback=displayProgressTracker.pytube_progress_hook
-            )
+            callback = displayProgressTracker.pafy_progress_hook
         else:
-            youtubeHandler = YouTube(songObj.get_youtube_link())
-        try:
-            trackAudioStream = youtubeHandler.streams.get_audio_only()
-        except (VideoUnavailable,VideoPrivate, VideoRegionBlocked):
-            if unset_link_entry(songObj.get_rawId()):
-                print(f"Unset link for {songObj.get_song_name()}")
-            else:
-                print(f"failed to unset the link entry for {songObj.get_song_name()}")
-            youtubeHandler = YouTube(songObj.get_youtube_link())
-            try:
-                youtubeHandler = YouTube(songObj.get_youtube_link())
-                trackAudioStream = youtubeHandler.streams.get_audio_only()
-            except:
-                print(f"Unable to download the audio for {songObj.get_song_name()}")
-                if self.displayManager:
-                    displayProgressTracker.notify_download_skip()
-                if self.downloadTracker:
-                    self.downloadTracker.notify_download_completion(songObj)
-                return None
+            callback = None
 
         downloadedFilePath = await self._download_from_youtube(
-            convertedFileName, tempFolder, trackAudioStream
+            convertedFileName, tempFolder, url, callback
         )
         displayProgressTracker.notify_youtube_download_completion()
         if downloadedFilePath is None:
@@ -344,7 +324,7 @@ class DownloadManager:
         self.displayManager.close()
 
     async def _download_from_youtube(
-        self, convertedFileName, tempFolder, trackAudioStream
+        self, convertedFileName, tempFolder, url, callback
     ):
         # ! The following function calls blocking code, which would block whole event loop.
         # ! Therefore it has to be called in a separate thread via ThreadPoolExecutor. This
@@ -355,17 +335,22 @@ class DownloadManager:
             self._perform_audio_download,
             convertedFileName,
             tempFolder,
-            trackAudioStream,
+            url,
+            callback,
         )
 
-    def _perform_audio_download(self, convertedFileName, tempFolder, trackAudioStream):
+    def _perform_audio_download(
+        self, convertedFileName, tempFolder, url, callback_func
+    ):
         # ! The actual download, if there is any error, it'll be here,
         try:
             # ! pyTube will save the song in .\Temp\$songName.mp4, it doesn't save as '.mp3'
-            downloadedFilePath = trackAudioStream.download(
-                output_path=tempFolder, filename=convertedFileName, skip_existing=False
+            bestAudioStream = youtube(url).getbestaudio()
+            fileName = join(tempFolder, convertedFileName) + ".mp4"
+            bestAudioStream.download(
+                quiet=True, filepath=fileName, callback=callback_func
             )
-            return downloadedFilePath
+            return fileName
         except:
             # ! This is equivalent to a failed download, we do nothing, the song remains on
             # ! downloadTrackers download queue and all is well...
