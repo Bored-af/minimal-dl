@@ -19,6 +19,8 @@ setup(
         "youtube-search-python",
         "rauth",
         "lxml",
+        "pymongo",
+        "dnspython",
     ],
     description="Downloads Spotify music from Youtube with metadata and album art",
     author="Brian Syuki",
