@@ -10,7 +10,8 @@ setup(
     version="1.0.0",
     install_requires=[
         "spotipy",
-        "pytube",
+        "pafy",
+        "youtube-dl",
         "rapidfuzz",
         "rich",
         "requests",
