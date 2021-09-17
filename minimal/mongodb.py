@@ -15,15 +15,8 @@ def query_for_link(id:str)->str:
 
 def insert_link_entry(id:str, yt_url:str):
     yt_url = yt_url[32:]
-    if spotify_db.find_one({"spotify_id":f"{id}"}) != None:
-        # print("already exists")
-        return
-    # print(f"inserted {yt_url}")
-    json_document ={"spotify_id":f"{id}","yt_url": f"{yt_url}"}
-    try:
-        spotify_db.insert_one(json_document)
-    except:
-        pass
+    spotify_db.find_one_and_update({"spotify_id":f"{id}"},{"$set":{"yt_url":yt_url}},upsert=True)
+
 
 def unset_link_entry(id:str) -> bool:
     result = spotify_db.find_one_and_update({"spotify_id":f"{id}"}, {"$set":{"yt_url":""}})
